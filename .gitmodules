@@ -1,0 +1,4 @@
+[submodule "externals/esp-idf"]
+	path = externals/esp-idf
+	url = https://github.com/espressif/esp-idf.git
+	branch = v5.1.2
