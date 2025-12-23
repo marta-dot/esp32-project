@@ -7,7 +7,6 @@
 class Led : public ILed {
 private:
     gpio_num_t pin;
-    bool active_led;
     static constexpr const char* TAG = "Led";
 
     TaskHandle_t blink_task_handle = NULL;
@@ -27,7 +26,7 @@ private:
         TickType_t delay_ticks = pdMS_TO_TICKS(delay);
         if (delay_ticks == 0) {
             delay_ticks = 1;
-            ESP_LOGW(TAG, "Blink period %dms is too short. Defaulting to 1 tick.", delay);
+            ESP_LOGW(TAG, "Blink period %dms is too short. Default to 1 tick.", delay);
         }
 
         while(1){
@@ -41,11 +40,11 @@ private:
 
 public:
     
-    explicit Led(gpio_num_t pin, bool active_led = true) : pin(pin), active_led(active_led)
+    explicit Led(gpio_num_t pin) : pin(pin)
     {
         gpio_reset_pin(pin);
         gpio_set_direction(pin, GPIO_MODE_OUTPUT);
-        ESP_LOGI(TAG, "Led initialized op gpio %d", pin);
+        ESP_LOGI(TAG, "Initialized op gpio %d", pin);
     }
 
     ~Led(){
@@ -62,7 +61,7 @@ public:
 
     void startBlinking(int delay) override{
         if (blink_task_handle != NULL) {
-            ESP_LOGW(TAG, "Blink task already running!");
+            ESP_LOGW(TAG, "Blinking");
             return;
         }
 

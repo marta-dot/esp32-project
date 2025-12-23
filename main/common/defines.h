@@ -1,12 +1,16 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include <inttypes.h>
+#include "nvs_flash.h"
+#include "nvs.h"
+// #include "nvs_handle.hpp"
 
 #include "esp_log.h"
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "driver/gpio.h"
 
 #define ENABLE_PRINTS_AND_LOGS  // TODO - move to CMake as an option
 #ifdef ENABLE_PRINTS_AND_LOGS

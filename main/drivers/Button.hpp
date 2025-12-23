@@ -17,7 +17,7 @@ private:
 
     static void button_task(void* arg){
         Button* button = static_cast<Button*>(arg);
-        ESP_LOGI(TAG, "Button task started for GPIO %d", button->pin);
+        ESP_LOGI(TAG, "Task started for GPIO %d", button->pin);
 
         while(1){
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -70,7 +70,7 @@ public:
         );
 
         gpio_isr_handler_add(pin, isr_handler, (void*)this);
-        ESP_LOGI(TAG, "Button initialized on GPIO %d (Task: %p)", pin, button_task_handle);
+        ESP_LOGI(TAG, "Initialized on GPIO %d (Task: %p)", pin, button_task_handle);
     }
 
     bool isPressed() override {
