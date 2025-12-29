@@ -35,6 +35,8 @@ lib/*.7z
 *.txt.user.*
 *.user
 
+.vscode
+
 
 #CMAKE FILES
 CMakeLists.txt.user
