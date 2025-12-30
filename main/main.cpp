@@ -16,12 +16,14 @@ static const char* LOG_TAG = "Main";
 #include "drivers/Led.hpp"
 #include "drivers/Button.hpp"
 #include "utils/nvsHandler.hpp"
+#include "utils/wifiHandler.hpp"
 #include <algorithm> 
 
 using namespace std;
 
 #define BLINK_GPIO GPIO_NUM_5
 #define BUTTON_GPIO GPIO_NUM_16
+
 
 void run(void);
 
@@ -41,6 +43,8 @@ void run(void)
     esp_err_t err = setUpNvs();
     std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("storage", NVS_READWRITE, &err);
 
+    wifi_init_sta();
+    
     gpio_install_isr_service(0);
 
     ILed* led = new Led(BLINK_GPIO);
@@ -88,10 +92,9 @@ void run(void)
             }
         });
 
+        
         while (1)
         {
-            // LOG_INFO("Loop");
-
             if(save_pending){
                 if(time(NULL) - last_change_time > 5){
                     saveNvs("blink_delay", handle, speed_to_save);
