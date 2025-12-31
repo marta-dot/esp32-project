@@ -17,12 +17,13 @@ static const char* LOG_TAG = "Main";
 #include "drivers/Button.hpp"
 #include "utils/nvsHandler.hpp"
 #include "utils/wifiHandler.hpp"
+#include "utils/deepSleepHandler.hpp"
 #include <algorithm> 
 
 using namespace std;
 
 #define BLINK_GPIO GPIO_NUM_5
-#define BUTTON_GPIO GPIO_NUM_16
+#define BUTTON_GPIO GPIO_NUM_13
 
 
 void run(void);
@@ -39,12 +40,17 @@ extern "C"
 void run(void)
 {
     LOG_INFO("Hello from main!");
+    TickType_t starting_time = xTaskGetTickCount();
+
+    //deep sleep
+    deep_sleep_register_rtc_timer_wakeup();
+    deep_sleep_register_ext0_wakeup();
 
     esp_err_t err = setUpNvs();
     std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("storage", NVS_READWRITE, &err);
 
     wifi_init_sta();
-    
+
     gpio_install_isr_service(0);
 
     ILed* led = new Led(BLINK_GPIO);
@@ -102,8 +108,14 @@ void run(void)
                 }
             }
 
+            TickType_t ending_time = xTaskGetTickCount();
+
+            if(pdTICKS_TO_MS(ending_time - starting_time) > 60000){
+                xTaskCreate(deep_sleep_task, "deep_sleep_task", 4096, NULL, 6, NULL);
+            }
+
             SLEEP_MS(1000);
-            
+
         }
     }
 
