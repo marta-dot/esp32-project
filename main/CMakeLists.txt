@@ -29,6 +29,8 @@ set(COMPONENT_REQUIRES
     lwip
     bt
     esp_eth
+    mqtt
+    json
     )
 
 set(COMPONENT_PRIV_REQUIRES)
