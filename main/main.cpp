@@ -45,7 +45,6 @@ void run(void)
     TickType_t starting_time = xTaskGetTickCount();
     TickType_t ending_time;
 
-    //deep sleep
     deep_sleep_register_rtc_timer_wakeup();
     deep_sleep_register_ext0_wakeup();
 
@@ -65,9 +64,6 @@ void run(void)
         wifi_init_sta();
     }
 
-    
-
-    //MQTT
     esp_mqtt_client_handle_t client = mqtt_app_start();
 
     SLEEP_MS(1000);
