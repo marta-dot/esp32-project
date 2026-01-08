@@ -52,7 +52,20 @@ void run(void)
     esp_err_t err = setUpNvs();
     std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("storage", NVS_READWRITE, &err);
 
-    wifi_init_sta();
+    string ssid;
+    string pass;
+
+    if (err == ESP_OK) {
+        getNvsValue("ssid",ssid, handle);
+        getNvsValue("pass",pass, handle);
+        printf("SSID: %s, pass: %s \n", ssid.c_str(), pass.c_str());
+
+        wifi_init_sta(ssid,pass);
+    }else{
+        wifi_init_sta();
+    }
+
+    
 
     //MQTT
     esp_mqtt_client_handle_t client = mqtt_app_start();
