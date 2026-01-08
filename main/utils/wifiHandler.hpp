@@ -17,7 +17,7 @@
 #include "lwip/sys.h"
 
 #define EXAMPLE_ESP_WIFI_SSID      "ssid"
-#define EXAMPLE_ESP_WIFI_PASS      "password"
+#define EXAMPLE_ESP_WIFI_PASS      "pass"
 
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -43,7 +43,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(void)
+void wifi_init_sta(std::string ssid = EXAMPLE_ESP_WIFI_SSID, std::string pass = EXAMPLE_ESP_WIFI_PASS)
 {
     s_wifi_event_group = xEventGroupCreate();
 
@@ -68,12 +68,11 @@ void wifi_init_sta(void)
                                                         NULL,
                                                         &instance_got_ip));
 
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
-        },
-    };
+    wifi_config_t wifi_config = {}; 
+
+    memcpy(wifi_config.sta.ssid, ssid.c_str(), ssid.size());
+    memcpy(wifi_config.sta.password, pass.c_str(), pass.size());    
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
@@ -88,8 +87,8 @@ void wifi_init_sta(void)
             pdMS_TO_TICKS(30000)); // 30s
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "connected to ap SSID:%s",
+                 EXAMPLE_ESP_WIFI_SSID);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
                  EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
