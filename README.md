@@ -1,11 +1,9 @@
-# <project_name>
+# ESP project
 
-<project_description>
+< ESP32 program that controls an LED via a button. It connects to Wi-Fi, reads/writes data to NVS memory, ses deep sleep mode, and communicates with the cloud via MQTT.>
 
 Target board - ESP32
-
 Build process is aimed for Ubuntu/Debian based Linux distributions.
- 
 
 # 0. Prerequisites
 To compile you need to get the following packages:
@@ -110,5 +108,19 @@ cd $BUILD_DIR
 idf.py -B ./ -C $PROJECT_DIR/ menuconfig
 ```
 
-# 2. Hardware requirements
-...
+
+## 1.8. Cloud communication - MQTT reporting
+First install the necessary tool
+```
+sudo apt install mosquitto-clients
+```
+
+To see messages sent by the ESP, run this command in terminal
+(using free Mosquitto server):
+```
+mosquitto_sub -h test.mosquitto.org -t "esp/test/json" -v
+```
+To send a custom message to the server, in another window run:
+```
+mosquitto_pub -h test.mosquitto.org -t "esp/test/json" -m "Mqtt test"
+```
