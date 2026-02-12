@@ -3,12 +3,22 @@ static const char* LOG_TAG = "led";
 
 #include "Led.hpp"
 
+int x[] = {10,20,50,200,1000};
 
-Led::Led(gpio_num_t pin) : pin(pin)
+Led::Led(gpio_num_t pin, IStorage* storage) : pin(pin), storage(storage)
 {
     gpio_reset_pin(pin);
     gpio_set_direction(pin, GPIO_MODE_OUTPUT);
     LOG_INFO("Initialized op gpio %d", pin);
+
+    int savedValue;
+    if (storage->getNvsValue(nvsKey, savedValue) == ESP_OK) {
+        for(int i=0; i<5; i++) {
+            if(speeds[i] == savedValue) currentIndex = i;
+        }
+    }
+    current_delay = speeds[currentIndex];
+    this->startBlinking(current_delay);
 }
 
 Led::~Led(){
@@ -24,41 +34,32 @@ void Led::off(){
 }
 
 void Led::blink_task(void* pvParameters){
-    BlinkParam* param = static_cast<BlinkParam*>(pvParameters);
-    Led* led = param->led;
-    int delay = param->delay;
+    Led* self = static_cast<Led*>(pvParameters);
 
-    delete param;
-
-    TickType_t delay_ticks = pdMS_TO_TICKS(delay);
-    if (delay_ticks == 0) {
-        delay_ticks = 1;
-        LOG_WARNING("Blink period %dms is too short. Default to 1 tick.", delay);
-    }
-
-    while(1){
-        led->on();
-        vTaskDelay(delay_ticks);
-        led->off();
-        vTaskDelay(delay_ticks);
+    while(1) {
+        TickType_t ticks = pdMS_TO_TICKS(self->current_delay);
+        if (ticks == 0) ticks = 1;
+          
+        self->on();
+        vTaskDelay(ticks);
+        self->off();
+        vTaskDelay(ticks);
     }
 }
 
 void Led::startBlinking(int delay){
+    current_delay = delay;
+
     if (blink_task_handle != NULL) {
         LOG_WARNING("Blinking");
         return;
     }
 
-    BlinkParam* param = new BlinkParam();
-    param->led = this;
-    param->delay = delay;
-
     BaseType_t result = xTaskCreate(
         blink_task,
         "led_blink_task",
         2048,
-        (void*)param,
+        this,
         5,
         &blink_task_handle
     );
@@ -66,8 +67,24 @@ void Led::startBlinking(int delay){
     if (result != pdPASS) {
         LOG_ERROR("Failed to create blink task!");
         blink_task_handle = NULL;
-        delete param;
     }
+}
+
+int Led::cycleSpeed() {
+    currentIndex = (currentIndex + 1) % 5;
+    current_delay = speeds[currentIndex]; // Task od razu to podchwyci
+    
+    LOG_INFO("Speed changed to: %d ms", current_delay);
+    return current_delay;
+}
+
+void Led::saveToStorage() {
+    storage->saveNvs(nvsKey, speeds[currentIndex]);
+    LOG_INFO("Saved speed %d to NVS", speeds[currentIndex]);
+}
+
+int Led::getCurrentSpeed() {
+    return speeds[currentIndex];
 }
 
 void Led::stopBlinking(){

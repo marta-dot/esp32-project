@@ -20,5 +20,4 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
 
 esp_mqtt_client_handle_t mqtt_app_start(void);
 
-
 #endif

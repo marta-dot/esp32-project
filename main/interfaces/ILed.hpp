@@ -9,4 +9,8 @@ class ILed {
     virtual void startBlinking(int delay) = 0;
     virtual void stopBlinking() = 0;
 
+    virtual int cycleSpeed() = 0;         // Przełącza na następną prędkość
+    virtual void saveToStorage() = 0;
+    virtual int getCurrentSpeed() = 0;
+
 };

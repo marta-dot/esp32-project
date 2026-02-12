@@ -16,11 +16,11 @@ public:
     NVS();
     ~NVS() = default;
 
-    void getNvsValue(const std::string& name, int &blink_delay) override;
-    void getNvsValue(const std::string& name, std::string &outText) override;
+    esp_err_t getNvsValue(const char* name, int &value) override;
+    esp_err_t getNvsValue(const char* name, std::string &text) override;
     
-    void saveNvs(const std::string& name, int value) override;
-    void saveNvs(const std::string& name, const std::string& value) override;
+    void saveNvs(const char* name, int value) override;
+    void saveNvs(const char* name, const char* text) override;
      
 };
     

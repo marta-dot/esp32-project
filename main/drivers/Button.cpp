@@ -26,6 +26,7 @@ void Button::button_task(void* arg){
 
 void IRAM_ATTR Button::isr_handler(void* arg) {
     Button* button = static_cast<Button*>(arg);
+    // button->handleButtonPressed()
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     vTaskNotifyGiveFromISR(button->button_task_handle, &xHigherPriorityTaskWoken);
@@ -42,7 +43,7 @@ Button::Button(gpio_num_t pin) : pin(pin) {
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    io_conf.intr_type = GPIO_INTR_ANYEDGE;
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
 
     gpio_config(&io_conf);
     last_state = isPressed();

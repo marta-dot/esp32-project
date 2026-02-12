@@ -12,9 +12,11 @@
 #include "nvs_flash.h"
 #include "esp_timer.h"
 #include <stdio.h>
+#include "esp_check.h"
 #include "defines.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include "../interfaces/IStorage.hpp"
 
 #define EXAMPLE_ESP_WIFI_SSID      "ssid"
 #define EXAMPLE_ESP_WIFI_PASS      "pass"
@@ -23,8 +25,18 @@
 #define WIFI_FAIL_BIT      BIT1
 
 
-void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-
-void wifi_init_sta(std::string ssid = EXAMPLE_ESP_WIFI_SSID, std::string pass = EXAMPLE_ESP_WIFI_PASS);
-
+class WifiHandler {
+    EventGroupHandle_t s_wifi_event_group;
+    TickType_t start_time;
+    TickType_t end_time;
+    std::string ssid;
+    std::string pass;
+public:
+    static void event_handler(void* arg, esp_event_base_t event_base,
+                                   int32_t event_id, void* event_data);
+    esp_err_t connect(std::string ssid, std::string pass);
+    void connect(IStorage& storage);
+    esp_err_t waitForConnection();
+    void handleConnectionFailure(esp_err_t err);
+};
 #endif

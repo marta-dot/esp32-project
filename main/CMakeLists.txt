@@ -14,9 +14,9 @@ set (ALL_SOURCES
     ${SRC_DIR}/common/error_codes.h
     ${SRC_DIR}/utils/deepSleepHandler.cpp
     ${SRC_DIR}/utils/mqttHandler.cpp
-    ${SRC_DIR}/utils/nvsHandler.cpp
     ${SRC_DIR}/utils/wifiHandler.cpp
     ${SRC_DIR}/drivers/Led.cpp
+    ${SRC_DIR}/drivers/NVS.cpp
     ${SRC_DIR}/drivers/Button.cpp
 
     )
