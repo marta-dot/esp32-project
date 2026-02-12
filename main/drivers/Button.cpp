@@ -3,39 +3,25 @@ static const char* LOG_TAG = "Button";
 
 #include "Button.hpp"
 
+void IRAM_ATTR Button::isr_handler(void* arg) {
+    Button* self = static_cast<Button*>(arg);
+    
+    // Uruchamiamy timer (np. na 50ms). 
+    // Jeśli timer już działa, restartujemy go (ignorujać błąd ESP_ERR_INVALID_STATE)
+    esp_timer_stop(self->debounce_timer); 
+    esp_timer_start_once(self->debounce_timer, 50000); // 50000 us = 50 ms
+}
 
-void Button::button_task(void* arg){
-    Button* button = static_cast<Button*>(arg);
-    LOG_INFO("Task started for GPIO %d", button->pin);
+void Button::timer_callback(void* arg) {
+    Button* self = static_cast<Button*>(arg);
 
-    while(1){
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        vTaskDelay(pdMS_TO_TICKS(DEBOUNCE_TIME_MS));
-
-        bool new_state = button->isPressed();
-
-        if (new_state != button->last_state) {
-            button->last_state = new_state;
-
-            if (button->user_callback) {
-                button->user_callback(new_state);
-            }
+    if (self->isPressed()) { 
+        // Przycisk jest nadal wciśnięty - to nie było zakłócenie
+        if (self->user_callback) {
+            self->user_callback(true); // Wywołujemy callback tylko dla wciśnięcia
         }
     }
 }
-
-void IRAM_ATTR Button::isr_handler(void* arg) {
-    Button* button = static_cast<Button*>(arg);
-    // button->handleButtonPressed()
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    vTaskNotifyGiveFromISR(button->button_task_handle, &xHigherPriorityTaskWoken);
-
-    if (xHigherPriorityTaskWoken) {
-        portYIELD_FROM_ISR();
-    }
-}
-
 
 Button::Button(gpio_num_t pin) : pin(pin) {
     gpio_config_t io_conf = {};
@@ -48,17 +34,15 @@ Button::Button(gpio_num_t pin) : pin(pin) {
     gpio_config(&io_conf);
     last_state = isPressed();
 
-    xTaskCreate(
-        button_task,
-        "button_task",
-        2048,
-        (void*)this,
-        10,
-        &button_task_handle
-    );
+    const esp_timer_create_args_t timer_args = {
+        .callback = &Button::timer_callback,
+        .arg = this,
+        .name = "button_debounce"
+    };
+    esp_timer_create(&timer_args, &debounce_timer);
 
-    gpio_isr_handler_add(pin, isr_handler, (void*)this);
-    LOG_INFO("Initialized on GPIO %d (Task: %p)", pin, button_task_handle);
+    gpio_isr_handler_add(pin, isr_handler, this);
+
 }
 
 bool Button::isPressed() {

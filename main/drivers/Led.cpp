@@ -10,6 +10,7 @@ Led::Led(gpio_num_t pin, IStorage* storage) : pin(pin), storage(storage)
     gpio_reset_pin(pin);
     gpio_set_direction(pin, GPIO_MODE_OUTPUT);
     LOG_INFO("Initialized op gpio %d", pin);
+    blink_semaphore = xSemaphoreCreateBinary();
 
     int savedValue;
     if (storage->getNvsValue(nvsKey, savedValue) == ESP_OK) {
@@ -39,18 +40,18 @@ void Led::blink_task(void* pvParameters){
     while(1) {
         TickType_t ticks = pdMS_TO_TICKS(self->current_delay);
         if (ticks == 0) ticks = 1;
-          
+
         self->on();
-        vTaskDelay(ticks);
+        xSemaphoreTake(self->blink_semaphore, ticks);
         self->off();
-        vTaskDelay(ticks);
+        xSemaphoreTake(self->blink_semaphore, ticks);
     }
 }
 
 void Led::startBlinking(int delay){
     current_delay = delay;
 
-    if (blink_task_handle != NULL) {
+    if (blink_task_handle != nullptr) {
         LOG_WARNING("Blinking");
         return;
     }
@@ -66,13 +67,15 @@ void Led::startBlinking(int delay){
 
     if (result != pdPASS) {
         LOG_ERROR("Failed to create blink task!");
-        blink_task_handle = NULL;
+        blink_task_handle = nullptr;
     }
 }
 
 int Led::cycleSpeed() {
     currentIndex = (currentIndex + 1) % 5;
-    current_delay = speeds[currentIndex]; // Task od razu to podchwyci
+    current_delay = speeds[currentIndex];
+
+    xSemaphoreGive(blink_semaphore); // podniesienie
     
     LOG_INFO("Speed changed to: %d ms", current_delay);
     return current_delay;
@@ -88,13 +91,13 @@ int Led::getCurrentSpeed() {
 }
 
 void Led::stopBlinking(){
-    if (blink_task_handle == NULL) {
+    if (blink_task_handle == nullptr) {
         return;
     }
 
     vTaskDelete(blink_task_handle);
 
-    blink_task_handle = NULL;
+    blink_task_handle = nullptr;
     off();
 }
 

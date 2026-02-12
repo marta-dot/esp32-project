@@ -3,11 +3,11 @@ static const char* LOG_TAG = "Deep sleep";
 
 #include "deepSleepHandler.hpp"
 
-static struct timeval sleep_enter_time;
+RTC_DATA_ATTR struct timeval DeepSleepHandler::sleep_enter_time;
 
-void deep_sleep_task(void *args)
+
+void DeepSleepHandler::checkWakeupReason()
 {
-
     struct timeval now;
     gettimeofday(&now, NULL);
     int sleep_time_ms = (now.tv_sec - sleep_enter_time.tv_sec) * 1000 + (now.tv_usec - sleep_enter_time.tv_usec) / 1000;
@@ -23,27 +23,35 @@ void deep_sleep_task(void *args)
             printf("Wake up from ext0\n");
         }
     }
+}
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+void DeepSleepHandler::setTimerWakeup(uint32_t seconds) 
+{
+    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup((uint64_t)seconds * 1000000));
+    LOG_INFO("Timer wakeup set to %" PRIu32 " seconds", seconds);
+}
 
-    LOG_INFO("Entering deep sleep");
+void DeepSleepHandler::setExternalWakeup(gpio_num_t pin, int level) {
 
+    ESP_ERROR_CHECK(esp_sleep_enable_ext0_wakeup(pin, level));
+    
+    if (level == 1) {
+        rtc_gpio_pullup_dis(pin);
+        rtc_gpio_pulldown_en(pin);
+    }
+    
+    LOG_INFO("EXT0 wakeup set on GPIO %d, level %d", pin, level);
+}
+
+void DeepSleepHandler::start() {
+    LOG_WARNING("Entering Deep Sleep now...");
+
+    
+    setTimerWakeup(DEEP_SLEEP_TIME_SEC);
+    setExternalWakeup((gpio_num_t)BUTTON_GPIO,WAKEUP_LEVEL);
+    
     gettimeofday(&sleep_enter_time, NULL);
+    vTaskDelay(pdMS_TO_TICKS(100));
     
     esp_deep_sleep_start();
-}
-
-void deep_sleep_register_rtc_timer_wakeup(void)
-{
-    const int wakeup_time_sec = 60;
-    printf("Enabling timer wakeup, %ds\n", wakeup_time_sec);
-    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000));
-}
-
-void deep_sleep_register_ext0_wakeup(void)
-{
-    printf("Enabling EXT0 wakeup on pin GPIO%d\n", ext_wakeup_pin_0);
-    ESP_ERROR_CHECK(esp_sleep_enable_ext0_wakeup(ext_wakeup_pin_0, WAKEUP_LEVEL));
-    ESP_ERROR_CHECK(rtc_gpio_pullup_dis(ext_wakeup_pin_0));
-    ESP_ERROR_CHECK(rtc_gpio_pulldown_en(ext_wakeup_pin_0));
 }

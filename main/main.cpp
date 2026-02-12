@@ -27,6 +27,7 @@ using namespace std;
 
 #define BLINK_GPIO GPIO_NUM_5
 #define BUTTON_GPIO GPIO_NUM_13
+
 // extern esp_mqtt_client_handle_t global_mqtt_client; 
 esp_mqtt_client_handle_t global_mqtt_client = nullptr;
 
@@ -36,10 +37,10 @@ void network_task(void* pvParameters) {
     IStorage* storage = static_cast<IStorage*>(pvParameters);
     WifiHandler wifi;
 
-    LOG_INFO("NetworkTask: Uruchamianie WiFi...");
+    LOG_INFO("Uruchamianie WiFi...");
     wifi.connect(*storage); 
 
-    LOG_INFO("NetworkTask: Próba uruchomienia MQTT...");
+    LOG_INFO("ruchomienie MQTT...");
     global_mqtt_client = mqtt_app_start();
 
     vTaskDelete(NULL); 
@@ -62,9 +63,6 @@ void run(void)
 
     gpio_install_isr_service(0);
 
-    // esp_err_t err = setUpNvs();
-    // std::unique_ptr<nvs::NVSHandle> 
-
     NVS nvs;
 
     ILed* led = new Led(BLINK_GPIO, &nvs);
@@ -72,8 +70,9 @@ void run(void)
 
     xTaskCreate(network_task, "network_task", 4096, &nvs, 5, NULL);
     
-    deep_sleep_register_rtc_timer_wakeup();
-    deep_sleep_register_ext0_wakeup();
+    DeepSleepHandler deepSleep;
+    deepSleep.checkWakeupReason();
+
 
     volatile time_t last_change_time = 0;
     volatile bool save_pending = false;
@@ -117,7 +116,7 @@ void run(void)
         ending_time = xTaskGetTickCount();
 
         if(pdTICKS_TO_MS(ending_time - starting_time) > 60000){
-            xTaskCreate(deep_sleep_task, "deep_sleep_task", 4096, NULL, 6, NULL);
+            deepSleep.start();
         }
 
         SLEEP_MS(1000);

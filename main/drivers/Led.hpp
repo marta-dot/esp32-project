@@ -5,6 +5,8 @@
 #include "freertos/task.h"
 #include "defines.h"
 #include "../interfaces/IStorage.hpp"
+#include "freertos/semphr.h"
+
 
 class Led : public ILed {
 private:
@@ -14,18 +16,14 @@ private:
     int currentIndex = 1;
     const char* nvsKey = "blink_delay";
     volatile int current_delay = 10;
-
-    TaskHandle_t blink_task_handle = NULL;
-
-    struct BlinkParam{
-        Led* led;
-        int delay;
-    };
+    TaskHandle_t blink_task_handle = nullptr;
+    SemaphoreHandle_t blink_semaphore = nullptr;
 
     static void blink_task(void* pvParameters);
 
 public:
-    
+
+    Led() = delete;
     explicit Led(gpio_num_t pin, IStorage* storage);
 
     ~Led();

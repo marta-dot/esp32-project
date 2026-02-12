@@ -6,19 +6,23 @@
 #include "freertos/queue.h"
 #include <functional>
 #include "defines.h"
+#include "esp_timer.h"
 
 class Button : public IButton {
 private:
     gpio_num_t pin;
     std::function<void(bool)> user_callback = nullptr;
     volatile bool last_state;
-    TaskHandle_t button_task_handle = NULL;
+    TaskHandle_t button_task_handle = nullptr;
     static const int DEBOUNCE_TIME_MS = 50;
 
-    static void button_task(void* arg);
+    // static void button_task(void* arg);
     static void IRAM_ATTR isr_handler(void* arg);
+    esp_timer_handle_t debounce_timer;
+    static void timer_callback(void* arg);
 
 public:
+    Button() = delete;
     explicit Button(gpio_num_t pin);
 
     bool isPressed() override;
