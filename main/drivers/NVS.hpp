@@ -11,16 +11,16 @@
 
 class NVS : public IStorage {
 private:
-    std::unique_ptr<nvs::NVSHandle> handle;       
+    std::unique_ptr<nvs::NVSHandle> pHandle;       
 public:
     NVS();
     ~NVS() = default;
 
-    esp_err_t getNvsValue(const char* name, int &value) override;
-    esp_err_t getNvsValue(const char* name, std::string &text) override;
+    esp_err_t getNvsValue(const char* pName, int &value) override;
+    esp_err_t getNvsValue(const char* pName, std::string &text) override;
     
-    void saveNvs(const char* name, int value) override;
-    void saveNvs(const char* name, const char* text) override;
+    void saveNvs(const char* pName, int value) override;
+    void saveNvs(const char* pName, const char* pText) override;
      
 };
     

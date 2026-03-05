@@ -18,6 +18,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <inttypes.h>
+#include "esp_check.h"
 
 #define BUTTON_GPIO GPIO_NUM_13
 #define DEEP_SLEEP_TIME_SEC 60
@@ -25,12 +26,12 @@
 
 class DeepSleepHandler {
 private:
-    static RTC_DATA_ATTR struct timeval sleep_enter_time;
+    static RTC_DATA_ATTR struct timeval sleepEnterTime;
 
 public:
 
-    void setTimerWakeup(uint32_t seconds);
-    void setExternalWakeup(gpio_num_t pin, int level);
+    esp_err_t setTimerWakeup(uint32_t seconds);
+    esp_err_t setExternalWakeup(gpio_num_t pin, int level);
 
     void checkWakeupReason();
     void start();

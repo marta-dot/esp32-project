@@ -26,14 +26,13 @@
 
 
 class WifiHandler {
-    EventGroupHandle_t s_wifi_event_group;
-    TickType_t start_time;
-    TickType_t end_time;
-    std::string ssid;
-    std::string pass;
+    EventGroupHandle_t m_wifiEventGroup;
+    TickType_t m_startTime;
+    TickType_t m_endTime = 0;
+    std::string m_ssid;
+    std::string m_pass;
 public:
-    static void event_handler(void* arg, esp_event_base_t event_base,
-                                   int32_t event_id, void* event_data);
+    static void eventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     esp_err_t connect(std::string ssid, std::string pass);
     void connect(IStorage& storage);
     esp_err_t waitForConnection();

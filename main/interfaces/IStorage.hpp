@@ -8,11 +8,11 @@ class IStorage{
 public:
     virtual ~IStorage() = default;
 
-    virtual esp_err_t getNvsValue(const char* name, int &value) = 0;
-    virtual esp_err_t getNvsValue(const char* name, std::string &text) = 0;
+    virtual esp_err_t getNvsValue(const char* pName, int &value) = 0;
+    virtual esp_err_t getNvsValue(const char* pName, std::string &text) = 0;
 
-    virtual void saveNvs(const char* name, int value) = 0;
-    virtual void saveNvs(const char* name, const char* text) = 0;
+    virtual void saveNvs(const char* pName, int value) = 0;
+    virtual void saveNvs(const char* pName, const char* pText) = 0;
 };
 
 #endif

@@ -15,6 +15,7 @@ set (ALL_SOURCES
     ${SRC_DIR}/utils/deepSleepHandler.cpp
     ${SRC_DIR}/utils/mqttHandler.cpp
     ${SRC_DIR}/utils/wifiHandler.cpp
+    ${SRC_DIR}/utils/AppControler.cpp
     ${SRC_DIR}/drivers/Led.cpp
     ${SRC_DIR}/drivers/NVS.cpp
     ${SRC_DIR}/drivers/Button.cpp
@@ -25,6 +26,9 @@ set (ALL_SOURCES
 set (ALL_INCLUDE_DIRS
     ${SRC_DIR}/
     ${SRC_DIR}/common/
+    ${SRC_DIR}/drivers
+    ${SRC_DIR}/interfaces
+    ${SRC_DIR}/utils
     )
 
 

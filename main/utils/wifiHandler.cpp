@@ -3,10 +3,10 @@ static const char* LOG_TAG = "wifi";
 
 #include "wifiHandler.hpp"
 
-void WifiHandler::event_handler(void* arg, esp_event_base_t event_base,
+void WifiHandler::eventHandler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
-    WifiHandler* self = (WifiHandler*) arg;
+    WifiHandler* self = static_cast<WifiHandler*>(arg);
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
@@ -16,14 +16,14 @@ void WifiHandler::event_handler(void* arg, esp_event_base_t event_base,
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         LOG_INFO("got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        xEventGroupSetBits(self->s_wifi_event_group, WIFI_CONNECTED_BIT);
+        xEventGroupSetBits(self->m_wifiEventGroup, WIFI_CONNECTED_BIT);
     }
 }
 
 esp_err_t WifiHandler::connect(std::string ssid, std::string pass)
 {
     
-    s_wifi_event_group = xEventGroupCreate();
+    m_wifiEventGroup = xEventGroupCreate();
 
     ESP_RETURN_ON_ERROR(esp_netif_init(), LOG_TAG, "esp_netif_init");
 
@@ -39,7 +39,7 @@ esp_err_t WifiHandler::connect(std::string ssid, std::string pass)
     esp_event_handler_instance_t instance_got_ip = {};
     ESP_RETURN_ON_ERROR(esp_event_handler_instance_register(WIFI_EVENT,
                                                         ESP_EVENT_ANY_ID,
-                                                        &WifiHandler::event_handler,
+                                                        &WifiHandler::eventHandler,
                                                         this,
                                                         &instance_any_id),
                                                         LOG_TAG, "wifi event handle register");
@@ -47,13 +47,13 @@ esp_err_t WifiHandler::connect(std::string ssid, std::string pass)
 
     ESP_RETURN_ON_ERROR(esp_event_handler_instance_register(IP_EVENT,
                                                         IP_EVENT_STA_GOT_IP,
-                                                        &WifiHandler::event_handler,
+                                                        &WifiHandler::eventHandler,
                                                         this,
                                                         &instance_got_ip),
                                                         LOG_TAG, "ip event handle register");                                    
 
     wifi_config_t wifi_config = {}; 
-
+        
     memcpy(wifi_config.sta.ssid, ssid.c_str(), ssid.size());
     memcpy(wifi_config.sta.password, pass.c_str(), pass.size());    
 
@@ -70,17 +70,17 @@ esp_err_t WifiHandler::connect(std::string ssid, std::string pass)
 
 esp_err_t WifiHandler::waitForConnection() {
 
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+    EventBits_t bits = xEventGroupWaitBits(m_wifiEventGroup,
         WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
         pdFALSE,
         pdFALSE,
         pdMS_TO_TICKS(30000)); // 30s
 
     if (bits & WIFI_CONNECTED_BIT) {
-        LOG_INFO("connected to ap SSID:%s", ssid.c_str());
+        LOG_INFO("connected to ap SSID:%s", m_ssid.c_str());
         return ESP_OK;
     } else if (bits & WIFI_FAIL_BIT) {
-        LOG_INFO("Failed to connect to SSID:%s, password:%s", ssid.c_str(), pass.c_str());
+        LOG_INFO("Failed to connect to SSID:%s, password:%s", m_ssid.c_str(), m_pass.c_str());
         return ESP_ERR_WIFI_PASSWORD;
     } else {
         LOG_ERROR("UNEXPECTED EVENT");
@@ -92,13 +92,13 @@ esp_err_t WifiHandler::waitForConnection() {
 }
 
 void WifiHandler::connect(IStorage& storage) {
-    esp_err_t errSsid = storage.getNvsValue("ssid", ssid);
-    esp_err_t errPass = storage.getNvsValue("pass", pass);
+    esp_err_t errSsid = storage.getNvsValue("ssid", m_ssid);
+    esp_err_t errPass = storage.getNvsValue("pass", m_pass);
     esp_err_t err;
 
-    if (errSsid == ESP_OK && errPass == ESP_OK && !ssid.empty()) {
-        LOG_INFO("Pobrano dane WiFi z Storage. SSID: %s", ssid.c_str());
-        err = this->connect(ssid, pass);
+    if (errSsid == ESP_OK && errPass == ESP_OK && !m_ssid.empty()) {
+        LOG_INFO("Pobrano dane WiFi z Storage. SSID: %s", m_ssid.c_str());
+        err = this->connect(m_ssid, m_pass);
     } else {
         err = this->connect(EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
     }
@@ -137,8 +137,8 @@ void WifiHandler::handleConnectionFailure(esp_err_t err) {
             break;
     }
 
-    LOG_WARNING("Restart systemu");
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    esp_restart();
+    // LOG_WARNING("Restart systemu");
+    // vTaskDelay(pdMS_TO_TICKS(3000));
+    // esp_restart();
 
 }

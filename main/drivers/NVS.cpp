@@ -11,12 +11,12 @@ NVS::NVS(){
         err = nvs_flash_init();
     }
 
-    handle = nvs::open_nvs_handle("storage", NVS_READWRITE, &err);
+    pHandle = nvs::open_nvs_handle("storage", NVS_READWRITE, &err);
 
 }
 
-esp_err_t NVS::getNvsValue(const char* name, int &value){
-    esp_err_t err = handle->get_item(name, value);
+esp_err_t NVS::getNvsValue(const char* pName, int &value){
+    esp_err_t err = pHandle->get_item(pName, value);
 
     switch (err) {
         case ESP_OK:
@@ -32,15 +32,15 @@ esp_err_t NVS::getNvsValue(const char* name, int &value){
     return err;
 }
 
-esp_err_t NVS::getNvsValue(const char* name, std::string &text){
+esp_err_t NVS::getNvsValue(const char* pName, std::string &text){
     size_t size = 0;
-    esp_err_t err = handle->get_item_size(nvs::ItemType::SZ, name, size);
+    esp_err_t err = pHandle->get_item_size(nvs::ItemType::SZ, pName, size);
 
     switch (err) {
         case ESP_OK:
             if (size > 0) {
                 char* buf = new char[size];
-                err = handle->get_string(name, buf, size);
+                err = pHandle->get_string(pName, buf, size);
                 if (err == ESP_OK) {
                     text = std::string(buf);
                     printf("Last use value = %s \n", text.c_str());
@@ -58,14 +58,14 @@ esp_err_t NVS::getNvsValue(const char* name, std::string &text){
     return err;
 }
 
-void NVS::saveNvs(const char* name, int value){
-    handle->set_item(name, value);
-    handle->commit();
+void NVS::saveNvs(const char* pName, int value){
+    pHandle->set_item(pName, value);
+    pHandle->commit();
     LOG_INFO("Saving current value = %d \n", value);
 }
 
-void NVS::saveNvs(const char* name, const char* text){
-    handle->set_string(name, text);
-    handle->commit();
-    LOG_INFO("Saving current value = %s \n", text);
+void NVS::saveNvs(const char* pName, const char* pText){
+    pHandle->set_string(pName, pText);
+    pHandle->commit();
+    LOG_INFO("Saving current value = %s \n", pText);
 }

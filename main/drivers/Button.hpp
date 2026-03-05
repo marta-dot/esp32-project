@@ -8,24 +8,25 @@
 #include "defines.h"
 #include "esp_timer.h"
 
-class Button : public IButton {
-private:
-    gpio_num_t pin;
-    std::function<void(bool)> user_callback = nullptr;
-    volatile bool last_state;
-    TaskHandle_t button_task_handle = nullptr;
-    static const int DEBOUNCE_TIME_MS = 50;
+// typedef void (*FCallback) (bool)>
+// typedef std::function<void (bool)> FCallback;
 
-    // static void button_task(void* arg);
-    static void IRAM_ATTR isr_handler(void* arg);
-    esp_timer_handle_t debounce_timer;
-    static void timer_callback(void* arg);
+class Button : public IButton {
 
 public:
     Button() = delete;
-    explicit Button(gpio_num_t pin);
+    explicit Button(gpio_num_t m_pin);
 
     bool isPressed() override;
-    void setCallback(std::function<void(bool)> callback) override;
+    void setCallback(FCallback callback) override;
  
+private:
+    gpio_num_t m_pin;
+    FCallback m_userCallback = nullptr;
+    bool m_lastState;
+    TaskHandle_t m_buttonTaskHandle = nullptr;
+
+private:
+    static void IRAM_ATTR isrHandler(void* pVar);
+
 };

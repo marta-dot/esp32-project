@@ -4,8 +4,9 @@ static const char* LOG_TAG = "MQTT";
 #include "mqttHandler.hpp"
 
 
-void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+void MqttHandler::mqttEventHandler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
+
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
     esp_mqtt_client_handle_t client = event->client;
 
@@ -51,13 +52,13 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
     }
 }
 
-esp_mqtt_client_handle_t mqtt_app_start(void)
+esp_mqtt_client_handle_t MqttHandler::mqttAppStart()
 {
     esp_mqtt_client_config_t mqtt_cfg = {};
     mqtt_cfg.broker.address.uri = BROKER_URI;
 
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_register_event(client, (esp_mqtt_event_id_t)ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+    esp_mqtt_client_register_event(client, (esp_mqtt_event_id_t)ESP_EVENT_ANY_ID, mqttEventHandler, NULL);
     esp_mqtt_client_start(client);
 
     return client;
